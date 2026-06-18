@@ -11,7 +11,33 @@ VozIA es un sistema que analiza llamadas telefónicas en tiempo real para detect
 - **Satisfacción** con el servicio
 - **Recomendaciones** para el agente
 
+#Estrctura 
+
+## 🏗️ Estructura del Proyecto
+
+vozia-backend/
+└── src/
+    └── app/
+        ├── ai_core/
+        │   ├── connectors/
+        │   ├── graph/
+        │   ├── nodes/
+        │   ├── prompts/
+        │   └── tools/
+        ├── api/
+        │   └── api.py
+        └── modules/
+            ├── copilot/
+            └── voice/
+          
+
+
+
+
 ## 🚀 Instalación Rápida
+
+
+
 
 ### 1. Crear y Activar Entorno Virtual
 
@@ -186,21 +212,7 @@ Simula una llamada completa con datos aleatorios. Útil para pruebas.
 }
 ```
 
-## 🏗️ Estructura del Proyecto
 
-```
-vozia-backend/
-├── main.py                 # Aplicación FastAPI principal
-├── models.py              # Modelos Pydantic
-├── config.py              # Configuración
-├── requirements.txt       # Dependencias
-├── services/
-│   ├── __init__.py
-│   ├── emotion.py         # Análisis de emociones
-│   ├── nlp.py             # Procesamiento de lenguaje natural
-│   └── transcription.py   # Transcripción de audio
-└── uploads/               # Directorio para archivos subidos
-```
 
 ## 🔧 Servicios
 
@@ -251,39 +263,7 @@ DATABASE_URL=sqlite:///./vozia.db
 CORS_ORIGINS=["http://localhost:3000", "http://localhost:8000"]
 ```
 
-## 🧪 Pruebas Rápidas
 
-### Con cURL
-
-```bash
-# Health check
-curl http://localhost:8000/health
-
-# Simular llamada
-curl -X POST http://localhost:8000/simular-llamada
-
-# Analizar texto
-curl -X POST http://localhost:8000/analizar-texto \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Estoy muy frustrado",
-    "call_id": "CALL_123"
-  }'
-```
-
-### Con Python
-
-```python
-import requests
-
-# Health check
-response = requests.get("http://localhost:8000/health")
-print(response.json())
-
-# Simular llamada
-response = requests.post("http://localhost:8000/simular-llamada")
-print(response.json())
-```
 
 ## 🔄 Flujo de Análisis
 
@@ -294,25 +274,3 @@ print(response.json())
 5. **Generación de Recomendación**: Basada en emoción y urgencia
 6. **Resumen**: Síntesis de los puntos clave
 
-## 📈 Próximos Pasos
-
-- [ ] Integración con modelo BERT multilingual real
-- [ ] WebSockets para análisis en tiempo real
-- [ ] Base de datos PostgreSQL
-- [ ] Autenticación con JWT
-- [ ] Rate limiting
-- [ ] Logs y monitoreo
-- [ ] Tests unitarios
-- [ ] Docker containerización
-
-## 📝 Licencia
-
-Proyecto académico - ISPC 2026
-
-## 👥 Autores
-
-Equipo Proyecto Integrador - VozIA
-
----
-
-**¿Preguntas?** Consults la documentación en `/docs`
