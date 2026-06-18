@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { FiMic, FiSquare, FiUploadCloud } from 'react-icons/fi'
+import { FiSquare, FiUploadCloud, FiHeadphones } from 'react-icons/fi'
 import { apiService } from '../services/api'
 
 export default function AudioRecorder({
@@ -371,14 +371,14 @@ export default function AudioRecorder({
           ) : (
             <div className="flex flex-col items-center text-center gap-2">
               <div className="w-12 h-12 rounded-xl bg-cyan-500/15 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
-                <FiMic size={24} />
+                <FiHeadphones size={24} />
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-200">
-                  Grabar con Micrófono
+                  Simular Llamada en Vivo
                 </p>
                 <p className="text-xs text-slate-400 mt-1">
-                  Habla en tiempo real y transcribe en vivo.
+                  Captura el audio de tus auriculares en tiempo real.
                 </p>
               </div>
             </div>

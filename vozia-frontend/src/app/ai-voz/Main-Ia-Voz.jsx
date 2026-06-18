@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiMic } from "react-icons/fi";
+import { FiHeadphones } from "react-icons/fi";
 
 import Header from "./components/Header";
 import AnalysisResults from "./components/AnalysisResults";
@@ -97,7 +97,7 @@ export default function Main_Ia_Voz() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white font-sans antialiased">
       {/* Margen superior para compensar la barra eliminada */}
-      <div className="max-w-7xl mx-auto px-4 pt-8">
+      <div className="max-w-7xl mx-auto px-4 pt-12 md:pt-8">
         <Header />
       </div>
 
@@ -117,16 +117,15 @@ export default function Main_Ia_Voz() {
                 <div className="flex flex-col gap-6">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                      <FiMic size={22} />
+                      <FiHeadphones size={22} />
                     </div>
 
                     <div>
                       <h2 className="text-xl font-semibold">
-                        Simulación de Transcripción
+                        Simulación de Audio de Llamada
                       </h2>
                       <p className="text-sm text-slate-400">
-                        Graba desde tu micrófono o sube un audio para
-                        transcribirlo con IA.
+                        Simula el audio de una llamada usando tus auriculares o sube un archivo grabado.
                       </p>
                     </div>
                   </div>
@@ -220,7 +219,7 @@ export default function Main_Ia_Voz() {
                   <div className="relative w-20 h-20 mb-6">
                     <div className="absolute inset-0 rounded-full bg-cyan-500/20 animate-pulse"></div>
                     <div className="absolute inset-2 rounded-full bg-cyan-500/40 flex items-center justify-center">
-                      <FiMic className="text-white" size={26} />
+                      <FiHeadphones className="text-white" size={26} />
                     </div>
                   </div>
 
