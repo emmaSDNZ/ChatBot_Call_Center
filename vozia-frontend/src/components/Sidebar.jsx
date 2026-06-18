@@ -4,9 +4,8 @@ import {
   LayoutDashboard,
   PanelLeftClose,
   PanelLeftOpen,
-  BarChart3,
-  ChevronRight,
-  Mic
+  Mic,
+  Headphones
 } from "lucide-react";
 
 export default function Sidebar({ collapsed, setCollapsed }) {
@@ -60,22 +59,13 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                 to="/"
                 className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity"
               >
-                <div className="w-9 h-9 min-w-9 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center">
-                  <span className="text-sm font-semibold text-white">
-                    H
-                  </span>
+                <div className="w-9 h-9 min-w-9 rounded-xl bg-cyan-500/5 border border-cyan-500/20 flex items-center justify-center">
+                  <Headphones size={16} className="text-cyan-400" />
                 </div>
-
                 {!collapsed && (
-                  <div className="whitespace-nowrap">
-                    <h1 className="text-[14px] font-semibold text-white">
-                      AI-Voz
-                    </h1>
-
-                    <p className="text-[11px] text-slate-500">
-                      Decision Intelligence
-                    </p>
-                  </div>
+                  <span className="text-base font-bold tracking-tight text-white">
+                    VozIA
+                  </span>
                 )}
               </Link>
 
@@ -106,58 +96,23 @@ export default function Sidebar({ collapsed, setCollapsed }) {
           </div>
 
           {/* NAVIGATION */}
-<NavItem
-  to="/"
-  icon={<Mic size={18} />}
-  title="AI Voz"
-  collapsed={collapsed}
-/>
+          <div className="px-3 py-4 flex flex-col gap-1.5">
+            <NavItem
+              to="/dashboard"
+              icon={<LayoutDashboard size={18} />}
+              title="Dashboard"
+              collapsed={collapsed}
+            />
 
-<NavItem
-  to="/dashboard"
-  icon={<LayoutDashboard size={18} />}
-  title="Dashboard"
-  collapsed={collapsed}
-/>
-
-<NavItem
-  to="/bi-intelligence"
-  icon={<BarChart3 size={18} />}
-  title="Business Intelligence"
-  collapsed={collapsed}
-/>
-
-
-        </div>
-
-        {/* FOOTER */}
-        <div className="border-t border-white/[0.03] p-4">
-          <div className="rounded-xl bg-white/[0.02] border border-white/[0.04]">
-            {!collapsed ? (
-              <div className="flex items-center justify-between px-3 py-3">
-                <div>
-                  <p className="text-sm font-medium text-white">
-                   IAVoz
-                  </p>
-
-                  <p className="text-[11px] text-slate-500 mt-1">
-                Análisis de Emociones con IA 
-                  </p>
-                </div>
-
-                <ChevronRight
-                  size={16}
-                  className="text-slate-500"
-                />
-              </div>
-            ) : (
-              <div className="flex justify-center py-3">
-                <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-white">
-                  H
-                </div>
-              </div>
-            )}
+            <NavItem
+              to="/"
+              icon={<Mic size={18} />}
+              title="AI Voz"
+              collapsed={collapsed}
+            />
           </div>
+
+
         </div>
       </aside>
     </>
