@@ -1,11 +1,16 @@
+from functools import lru_cache
 from pysentimiento import create_analyzer
 
 
 # ============================================================
-# MODELOS (se cargan una sola vez en memoria)
+# SINGLETON CON LRU CACHE (NO SE RECREA NUNCA)
 # ============================================================
-_sentiment_analyzer = create_analyzer(task="sentiment", lang="es")
-_emotion_analyzer = create_analyzer(task="emotion", lang="es")
+@lru_cache(maxsize=1)
+def get_analyzers():
+
+    sentiment = create_analyzer(task="sentiment", lang="es")
+    emotion = create_analyzer(task="emotion", lang="es")
+    return sentiment, emotion
 
 
 # ============================================================
@@ -14,12 +19,8 @@ _emotion_analyzer = create_analyzer(task="emotion", lang="es")
 def nlp_engine(text: str) -> dict:
     """
     Analiza sentimiento y emoción de un texto en español.
-
-    Returns:
-        dict:
-            sentiment: POS | NEG | NEU
-            emotion: sadness | anger | joy | fear | surprise | others
     """
+
     if not text or not isinstance(text, str):
         return {
             "text": "",
@@ -29,8 +30,11 @@ def nlp_engine(text: str) -> dict:
 
     text = text.strip()
 
-    sentiment_result = _sentiment_analyzer.predict(text)
-    emotion_result = _emotion_analyzer.predict(text)
+    # 🔥 SOLO SE INICIALIZA UNA VEZ
+    sentiment_analyzer, emotion_analyzer = get_analyzers()
+
+    sentiment_result = sentiment_analyzer.predict(text)
+    emotion_result = emotion_analyzer.predict(text)
 
     return {
         "text": text,
@@ -38,10 +42,12 @@ def nlp_engine(text: str) -> dict:
         "emotion": emotion_result.output
     }
 
+
 # ============================================================
-# CLI TEST MODE
+# CLI TEST MODE (NO TOCAR - OK)
 # ============================================================
 if __name__ == "__main__":
+
     print("Pysentimiento NLP - CLI Test Mode")
     print("Escribe 'exit' para salir\n")
 

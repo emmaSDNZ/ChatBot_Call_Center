@@ -26,11 +26,11 @@ calls_collection = None
 if mongo_uri:
     try:
         if "<db_password>" not in mongo_uri:
-            # CAMBIA ESTA PARTE POR ESTO:
+  
             mongo_client = MongoClient(
                 mongo_uri,
                 tls=True,
-                tlsAllowInvalidCertificates=True, # ESTO SALTA EL SSL HANDSHAKE ERROR
+                tlsAllowInvalidCertificates=True,
                 tlsAllowInvalidHostnames=True
             )
             db = mongo_client[mongo_db_name]
@@ -103,7 +103,7 @@ def call_state(req: ChatRequest):
     }
 
     result = app_agent_call_state.invoke(state, config=config)
-    print(result)
+
 
     MEMORY_LIVE_CONTEXT[req.session_id] = result["call_state"]
 
