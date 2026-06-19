@@ -8,3 +8,4 @@ pysentimiento==0.7.3
 python-dotenv==1.2.2
 Requests==2.34.2
 speechrecognition==3.16.1
+uvicorn==0.49.0

@@ -19,7 +19,7 @@ load_dotenv()
 
 mongo_uri = os.getenv("MONGO_URI")
 mongo_db_name = os.getenv("MONGO_DB_NAME", "VozIAdb")
-
+app_api = FastAPI()
 db = None
 calls_collection = None
 
@@ -40,7 +40,7 @@ if mongo_uri:
     except Exception as e:
         print(f"Error al conectar con MongoDB Atlas: {e}")
         
-app_api = FastAPI()
+
 
 MEMORY_LIVE_CONTEXT = {}
 AUDIO_CACHE = {}
