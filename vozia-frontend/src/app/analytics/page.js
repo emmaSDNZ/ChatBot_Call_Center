@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from "../../config/api";
 
 import { useEffect, useRef } from "react";
 
@@ -20,16 +21,16 @@ export default function DashboardPage() {
     if (!dashboardData) return;
     if (syncedRef.current) return;
 
-    fetch("http://127.0.0.1:8000/copilot/sync-dashboard", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        session_id: "session_test_123",
-        dashboard: dashboardData,
-      }),
-    });
+fetch(`${API_URL}/copilot/sync-dashboard`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    session_id: "session_test_123",
+    dashboard: dashboardData,
+  }),
+});
 
     syncedRef.current = true;
   }, [dashboardData]);

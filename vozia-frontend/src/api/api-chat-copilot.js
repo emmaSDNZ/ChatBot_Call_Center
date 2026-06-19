@@ -1,22 +1,28 @@
+import { API_URL } from "../config/api";
+
 export async function POST_API_CHAT_COPILOT(req) {
   try {
     const body = await req.json();
     const { message } = body;
 
-    // Conexión directa al endpoint de FastAPI
-    const fastapiResponse = await fetch("http://127.0.0.1:8000/copilot/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: message,
-        session_id: "default-session" 
-      }),
-    });
+    const fastapiResponse = await fetch(
+      `${API_URL}/copilot/chat`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message,
+          session_id: "default-session",
+        }),
+      }
+    );
 
     if (!fastapiResponse.ok) {
-      throw new Error(`FastAPI error: ${fastapiResponse.status}`);
+      throw new Error(
+        `FastAPI error: ${fastapiResponse.status}`
+      );
     }
 
     const data = await fastapiResponse.json();
@@ -27,12 +33,13 @@ export async function POST_API_CHAT_COPILOT(req) {
         reply: data.response,
       },
     });
-
   } catch (error) {
     return Response.json(
       {
         success: false,
-        error: error.message || "Internal API error",
+        error:
+          error.message ||
+          "Internal API error",
       },
       { status: 500 }
     );

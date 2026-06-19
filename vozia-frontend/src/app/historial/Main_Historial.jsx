@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Header from "../ai-voz/components/Header";
 
+import { API_URL } from "../../config/api";
 export default function Main_Historial() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +44,7 @@ export default function Main_Historial() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://127.0.0.1:8000/ia-voz/history");
+      const response = await fetch(`${API_URL}/ia-voz/history`);
       if (!response.ok) {
         throw new Error("Error al obtener el historial del servidor.");
       }
@@ -117,7 +118,7 @@ export default function Main_Historial() {
     }
 
     // Iniciar reproducción del audio real desde el endpoint del backend
-    const audioUrl = `http://127.0.0.1:8000/ia-voz/audio/${sessionId}`;
+    const audioUrl =   `${API_URL}/ia-voz/audio/${sessionId}`;;
     const newAudio = new Audio(audioUrl);
 
     newAudio.addEventListener("canplaythrough", () => {

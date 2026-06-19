@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useDashboardContext } from "../../contexts/DashboardContext";
 import { usePageContextBridge } from "../../contexts/PageContextBridge";
-
+import { API_URL } from "../../config/api";
 import KPIGrid from "./dashboard/componentes/KPIGrid";
 import RevenueChart from "./dashboard/componentes/RevenueChart";
 import AIInsights from "./dashboard/componentes/AIInsights";
@@ -38,7 +38,8 @@ export default function DashboardPage() {
     if (!dashboardData) return;
     if (syncedRef.current) return;
 
-    fetch("http://127.0.0.1:8000/copilot/sync-dashboard", {
+
+    fetch(`${API_URL}/copilot/sync-dashboard`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

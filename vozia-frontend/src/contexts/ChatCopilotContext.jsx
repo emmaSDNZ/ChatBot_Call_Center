@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-
+import { API_URL } from "../config/api"
 const ChatCopilotContext = createContext(null);
 
 export function ChatCopilotProvider({ children }) {
@@ -27,14 +27,16 @@ export function ChatCopilotProvider({ children }) {
     try {
       const session_id = actualPageContext?.session_id || "DEMO_001";
 
-      const res = await fetch("http://127.0.0.1:8000/copilot/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: currentInput,
-          session_id: session_id
-        }),
-      });
+      const res = await fetch(`${API_URL}/copilot/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: currentInput,
+            session_id,
+          }),
+        });
 
       if (!res.ok) throw new Error(`Error backend: ${res.status}`);
 
