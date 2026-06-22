@@ -4,7 +4,6 @@ langchain_ollama==1.1.0
 langgraph==1.2.6
 pydantic==2.13.4
 pymongo==4.17.0
-pysentimiento==0.7.3
 python-dotenv==1.2.2
 Requests==2.34.2
 speechrecognition==3.16.1

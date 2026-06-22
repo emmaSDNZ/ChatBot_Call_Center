@@ -1,7 +1,5 @@
 import json
 from typing import TypedDict, List, Dict, Any
-
-from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 
 from langchain_core.messages import (
@@ -85,10 +83,11 @@ def build_prompt_node(state: IaVozState):
 # ============================================================
 def llm_analysis_node(state: IaVozState):
 
-    from src.app.nlp.pysentiment import nlp_engine
+    from src.app.nlp.nlp_engine import nlp_engine
 
     def fallback(transcript: str):
         print("🟡 NLP FALLBACK ACTIVE (pysentimiento)")
+        print("ESTO ES TRANSCRIPT", transcript)
 
         result = nlp_engine(transcript)
 
@@ -123,7 +122,6 @@ def llm_analysis_node(state: IaVozState):
     except Exception as e:
 
         print("🔴 LLM FALLÓ → NLP ACTIVADO:", str(e))
-
         transcript = state.get("transcript", "")
         nlp_result = fallback(transcript)
 
