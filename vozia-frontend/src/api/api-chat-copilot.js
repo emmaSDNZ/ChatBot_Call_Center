@@ -3,7 +3,7 @@ import { API_URL } from "../config/api";
 export async function POST_API_CHAT_COPILOT(req) {
   try {
     const body = await req.json();
-    const { message } = body;
+    const { message, active_model, page_context } = body;
 
     const fastapiResponse = await fetch(
       `${API_URL}/copilot/chat`,
@@ -15,6 +15,8 @@ export async function POST_API_CHAT_COPILOT(req) {
         body: JSON.stringify({
           message,
           session_id: "default-session",
+          active_model: active_model || "openai",
+          page_context: page_context || null,
         }),
       }
     );

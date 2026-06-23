@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import { Send } from "lucide-react";
 
 export default function ChatCopilotInput({ input, setInput, handleSend }) {
@@ -22,7 +22,7 @@ export default function ChatCopilotInput({ input, setInput, handleSend }) {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about revenue, growth, customers..."
+            placeholder="Pregunta sobre los ingresos, el crecimiento, los clientes..."
             className="
               flex-1 bg-transparent outline-none
               text-sm text-slate-100 placeholder:text-slate-500
@@ -42,11 +42,7 @@ export default function ChatCopilotInput({ input, setInput, handleSend }) {
             <Send size={16} />
           </button>
         </form>
-
-        <div className="mt-2 text-[10px] text-slate-600">
-          Helix-IA powered business intelligence layer
-        </div>
       </div>
     </>
-  )
+  );
 }

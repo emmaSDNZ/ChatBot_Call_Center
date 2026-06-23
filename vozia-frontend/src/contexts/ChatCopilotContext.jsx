@@ -26,6 +26,7 @@ export function ChatCopilotProvider({ children }) {
 
     try {
       const session_id = actualPageContext?.session_id || "DEMO_001";
+      const active_model = actualPageContext?.active_model || "openai";
 
       const res = await fetch(`${API_URL}/copilot/chat`, {
           method: "POST",
@@ -35,6 +36,8 @@ export function ChatCopilotProvider({ children }) {
           body: JSON.stringify({
             message: currentInput,
             session_id,
+            active_model,
+            page_context: actualPageContext,
           }),
         });
 

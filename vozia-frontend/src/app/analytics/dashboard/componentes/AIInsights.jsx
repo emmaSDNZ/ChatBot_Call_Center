@@ -7,7 +7,7 @@ export default function AIInsights({ data = [] }) {
         <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
 
         <h3 className="text-xl font-semibold">
-          AI DETECTED
+          Detecciones de la IA
         </h3>
       </div>
 

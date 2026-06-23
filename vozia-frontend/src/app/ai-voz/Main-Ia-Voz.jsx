@@ -162,8 +162,8 @@ export default function Main_Ia_Voz() {
               {currentStep === 1 && (
                 <div className="flex flex-col gap-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                      <FiHeadphones size={22} />
+                    <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center shrink-0">
+                      <FiHeadphones size={22} className="text-cyan-400" />
                     </div>
 
                     <div>

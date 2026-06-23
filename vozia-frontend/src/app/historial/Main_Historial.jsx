@@ -24,7 +24,10 @@ import {
 import Header from "../ai-voz/components/Header";
 
 import { API_URL } from "../../config/api";
+import { usePageContextBridge } from "../../contexts/PageContextBridge";
+
 export default function Main_Historial() {
+  const { setPageContext } = usePageContextBridge();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,11 +37,51 @@ export default function Main_Historial() {
   const [playingAudio, setPlayingAudio] = useState(null);
   const [audioProgress, setAudioProgress] = useState({});
   const [activeAudioEl, setActiveAudioEl] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
   const [filterMetric, setFilterMetric] = useState("all");
+
+  const handlePageChange = (pageNum) => {
+    setCurrentPage(pageNum);
+    const element = document.getElementById("history-list-section");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, filterMetric]);
+
+  // Sincronizar contexto de página para el Copiloto
+  useEffect(() => {
+    const activeCall = expandedSession
+      ? history.find((c) => c.session_id === expandedSession)
+      : null;
+
+    setPageContext({
+      page: "historial",
+      session_id: expandedSession || "DEMO_001",
+      total_calls: history.length,
+      current_page: currentPage,
+      active_call: activeCall
+        ? {
+            session_id: activeCall.session_id,
+            emocion_principal: activeCall.call_state?.analisis?.emocion_principal || "neutral",
+            satisfaccion: activeCall.call_state?.analisis?.satisfaccion || 0,
+            transcript: activeCall.transcript,
+          }
+        : null,
+    });
+
+    return () => {
+      setPageContext(null);
+    };
+  }, [history, expandedSession, currentPage, setPageContext]);
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -105,6 +148,12 @@ export default function Main_Historial() {
         }
       }
       setPlayingAudio(null);
+      return;
+    }
+
+    // Si ya hay otra reproducción en curso (de otra sesión), no permitimos reproducir otra
+    if (playingAudio !== null) {
+      console.warn("Hay otra reproducción en curso. Detén o espera a que finalice para reproducir otra.");
       return;
     }
 
@@ -283,6 +332,13 @@ export default function Main_Historial() {
       return dateB - dateA;
     });
 
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(processedHistory.length / itemsPerPage);
+  const paginatedHistory = processedHistory.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white font-sans antialiased">
       {/* INJECT ANIMATION STYLE FOR WAVEFORM */}
@@ -317,7 +373,7 @@ export default function Main_Historial() {
       </div>
 
       {/* CONTENEDOR PRINCIPAL */}
-      <div className="max-w-7xl mx-auto px-4 pb-12">
+      <div className="max-w-7xl mx-auto px-4 pb-12" id="history-list-section">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight font-sans">
@@ -516,7 +572,7 @@ export default function Main_Historial() {
               </div>
             ) : (
               <div className="space-y-4">
-                {processedHistory.map((call) => {
+                {paginatedHistory.map((call) => {
                   const sessionId = call.session_id;
                   const isExpanded = expandedSession === sessionId;
                   const state = call.call_state || {};
@@ -525,6 +581,10 @@ export default function Main_Historial() {
                   const accion = state.accion || {};
                   const copilot = state.copilot || {};
                   const guia_agente = copilot.guia_agente || {};
+
+                  const hasAudio = !!call.has_audio;
+                  const isOtherPlaying = playingAudio !== null && playingAudio !== sessionId;
+                  const isCurrentPlaying = playingAudio === sessionId;
 
                   // Calcular valores de métricas y sanitizarlos
                   const emocion = analisis.emocion_principal || "neutral";
@@ -673,16 +733,30 @@ export default function Main_Historial() {
                               </div>
 
                               {/* REPRODUCTOR SIMULADO */}
-                              <div className="flex items-center gap-3 bg-slate-900/60 border border-white/5 rounded-lg py-1.5 px-3">
+                              <div className={`flex items-center gap-3 bg-slate-900/60 border border-white/5 rounded-lg py-1.5 px-3 transition-opacity ${
+                                !hasAudio || isOtherPlaying ? "opacity-40" : "opacity-100"
+                              }`}>
                                 <button
-                                  onClick={() => togglePlayAudio(sessionId)}
+                                  onClick={() => hasAudio && !isOtherPlaying && togglePlayAudio(sessionId)}
+                                  disabled={!hasAudio || isOtherPlaying}
                                   className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-                                    playingAudio === sessionId
-                                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                                      : "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
+                                    !hasAudio
+                                      ? "bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed"
+                                      : isCurrentPlaying
+                                        ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                        : isOtherPlaying
+                                          ? "bg-slate-800 text-slate-600 border border-slate-700/50 cursor-not-allowed"
+                                          : "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30"
                                   }`}
+                                  title={
+                                    !hasAudio
+                                      ? "Audio no disponible"
+                                      : isOtherPlaying
+                                        ? "Pausa la reproducción actual para reproducir este audio"
+                                        : undefined
+                                  }
                                 >
-                                  {playingAudio === sessionId ? (
+                                  {isCurrentPlaying ? (
                                     <Pause size={12} />
                                   ) : (
                                     <Play size={12} className="ml-0.5" />
@@ -691,15 +765,14 @@ export default function Main_Historial() {
 
                                 <div className="flex flex-col">
                                   <span className="text-[9px] uppercase tracking-wider text-slate-500 font-semibold">
-                                    Simulador de Audio
+                                    {!hasAudio ? "Audio no disponible" : "Reproductor de Audio"}
                                   </span>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     {/* Waveform animation */}
                                     <div className="flex items-end gap-0.5 h-4 w-[60px]">
                                       {[...Array(10)].map((_, i) => {
                                         const delay = `${i * 0.08}s`;
-                                        const isPlaying =
-                                          playingAudio === sessionId;
+                                        const isPlaying = isCurrentPlaying;
                                         return (
                                           <div
                                             key={i}
@@ -721,9 +794,11 @@ export default function Main_Historial() {
                                       })}
                                     </div>
                                     <span className="text-[10px] text-slate-400 font-mono">
-                                      {playingAudio === sessionId
-                                        ? `${Math.floor(((audioProgress[sessionId] || 0) / 100) * 10)}s`
-                                        : getSimulatedDuration(call.transcript)}
+                                      {!hasAudio
+                                        ? "--:--"
+                                        : isCurrentPlaying
+                                          ? `${Math.floor(((audioProgress[sessionId] || 0) / 100) * 10)}s`
+                                          : getSimulatedDuration(call.transcript)}
                                     </span>
                                   </div>
                                 </div>
@@ -986,6 +1061,82 @@ export default function Main_Historial() {
                     </div>
                   );
                 })}
+
+                {/* PAGINACIÓN */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 px-4 py-4 border-t border-white/5 bg-slate-950/20 rounded-xl">
+                    <span className="text-xs text-slate-400">
+                      Mostrando <span className="font-semibold text-white">{(currentPage - 1) * itemsPerPage + 1}</span> al{" "}
+                      <span className="font-semibold text-white">
+                        {Math.min(currentPage * itemsPerPage, processedHistory.length)}
+                      </span>{" "}
+                      de <span className="font-semibold text-white">{processedHistory.length}</span> llamadas
+                    </span>
+                    
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                          currentPage === 1
+                            ? "border-white/5 bg-white/[0.01] text-slate-600 cursor-not-allowed"
+                            : "border-white/10 bg-slate-900/60 text-slate-300 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400"
+                        }`}
+                      >
+                        Anterior
+                      </button>
+
+                      {/* Render page numbers */}
+                      {[...Array(totalPages)].map((_, i) => {
+                        const pageNum = i + 1;
+                        // Solo mostramos primera, última, actual, anterior y siguiente para evitar demasiados botones
+                        if (
+                          pageNum === 1 ||
+                          pageNum === totalPages ||
+                          Math.abs(pageNum - currentPage) <= 1
+                        ) {
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`w-8 h-8 rounded-lg text-xs font-bold transition-all border ${
+                                currentPage === pageNum
+                                  ? "border-cyan-500 bg-cyan-500/10 text-cyan-400 font-extrabold shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                                  : "border-white/5 bg-slate-900/40 text-slate-400 hover:border-white/10 hover:bg-slate-900/60 hover:text-white"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        }
+                        // Mostrar puntos suspensivos en los saltos
+                        if (
+                          (pageNum === 2 && currentPage > 3) ||
+                          (pageNum === totalPages - 1 && currentPage < totalPages - 2)
+                        ) {
+                          return (
+                            <span key={pageNum} className="px-1 text-xs text-slate-600 font-bold select-none">
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
+
+                      <button
+                        onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                          currentPage === totalPages
+                            ? "border-white/5 bg-white/[0.01] text-slate-600 cursor-not-allowed"
+                            : "border-white/10 bg-slate-900/60 text-slate-300 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400"
+                        }`}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>

@@ -28,11 +28,11 @@ export default function SalesTarget({ data }) {
 
       <div className="relative z-10">
         <span className="text-[11px] uppercase tracking-wider text-slate-500">
-          Performance
+          Rendimiento
         </span>
 
         <h3 className="text-lg font-semibold text-white mt-2">
-          Sales Target
+          Objetivo de Ventas
         </h3>
 
         <div className="mt-5 flex items-center justify-center">
@@ -71,7 +71,7 @@ export default function SalesTarget({ data }) {
               </h2>
 
               <p className="text-xs text-slate-500 mt-1">
-                Goal Reached
+                Meta Alcanzada
               </p>
             </div>
           </div>

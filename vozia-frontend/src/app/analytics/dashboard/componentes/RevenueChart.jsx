@@ -41,16 +41,16 @@ export default function RevenueChart({ data = [] }) {
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
 
             <span className="text-[11px] uppercase tracking-wider text-indigo-300 font-medium">
-              Revenue Analytics
+              Análisis de Ingresos
             </span>
           </div>
 
           <h3 className="text-xl font-semibold tracking-tight text-white mt-3">
-            Revenue Performance
+            Rendimiento de Ingresos
           </h3>
 
           <p className="text-sm text-slate-400 mt-1">
-            AI detected strong upward trend this quarter.
+            La IA detectó una sólida tendencia alcista este trimestre.
           </p>
         </div>
 
@@ -63,7 +63,7 @@ export default function RevenueChart({ data = [] }) {
           "
         >
           <p className="text-[11px] text-emerald-300 uppercase tracking-wide">
-            Growth
+            Crecimiento
           </p>
 
           <h4 className="text-lg font-semibold text-white mt-1">

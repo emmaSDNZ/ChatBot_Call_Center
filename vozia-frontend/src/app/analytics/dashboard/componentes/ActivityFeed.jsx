@@ -28,11 +28,11 @@ export default function ActivityFeed({ data = [] }) {
       <div className="relative z-10">
         <div>
           <span className="text-[11px] uppercase tracking-wider text-slate-500">
-            Live Monitoring
+            Monitoreo en Vivo
           </span>
 
           <h3 className="text-lg font-semibold text-white mt-2">
-            Activity Feed
+            Flujo de Actividad
           </h3>
         </div>
 

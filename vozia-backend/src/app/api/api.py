@@ -57,6 +57,8 @@ app_api.add_middleware(
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default-session"
+    active_model: str = "openai"
+    page_context: dict = None
 
 
 # ============================================================
@@ -141,44 +143,158 @@ def call_state(req: ChatRequest):
 
 @app_api.post("/copilot/chat")
 def copilot_chat(req: ChatRequest):
+    import json
+    from src.app.ai_core.connectors.llm_client_Ollama import get_ollama_llm
+    from langchain_core.messages import SystemMessage, HumanMessage
+
+    # Determinar qué página está consultando el usuario
+    page = "ia_voz"
+    if req.page_context and isinstance(req.page_context, dict):
+        page = req.page_context.get("page", "ia_voz")
+
+    # Mapear el nombre del modelo
+    model_name_map = {
+        "openai": "OpenAI GPT-4",
+        "gemini": "Gemini 1.5 Pro",
+        "anthropic": "Anthropic Claude 3.5"
+    }
+    model_label = model_name_map.get(req.active_model.lower(), "Groq LLaMA")
+
+    # Obtener el LLM en modo texto plano (json_mode=False) para responder la pregunta del usuario
+    llm = get_ollama_llm(json_mode=False)
 
     call_state = MEMORY_LIVE_CONTEXT.get(req.session_id)
-
-    if call_state is None:
-        return {
-            "session_id": req.session_id,
-            "response": "No hay llamada activa.",
-            "call_state": None
-        }
-
-    state = {
-        "messages": [HumanMessage(content=req.message)],
-        "call_state": call_state
-    }
-
-    result = app_copilot.invoke(state)
-
-    updated_state = result["call_state"]
-
-    MEMORY_LIVE_CONTEXT[req.session_id] = updated_state
-
-    if calls_collection is not None:
+    if call_state is None and calls_collection is not None and req.session_id:
         try:
-            calls_collection.update_one(
-                {"session_id": req.session_id},
-                {"$set": {
-                    "call_state": updated_state,
-                    "last_updated": datetime.utcnow()
-                }},
-                upsert=True
-            )
-
+            doc = calls_collection.find_one({"session_id": req.session_id})
+            if doc:
+                call_state = doc.get("call_state")
+                MEMORY_LIVE_CONTEXT[req.session_id] = call_state
         except Exception as e:
-            print(f"Error al actualizar copiloto en MongoDB: {e}")
+            print(f"Error al buscar sesión en MongoDB: {e}")
+
+    # Construir el System Prompt según la página activa
+    if page == "dashboard":
+        dashboard_data = req.page_context.get("data")
+        system_prompt = (
+            f"Actúas como un Business Copilot inteligente de VozIA (simulando la personalidad y estilo del asistente: {model_label}).\n"
+            f"Estás asistiendo a un gerente del Call Center que está visualizando el Tablero de Control y Métricas de Analítica de VozIA en tiempo real.\n\n"
+            f"MÉTRICAS DEL TABLERO ACTUALES:\n"
+            f"{json.dumps(dashboard_data, ensure_ascii=False, indent=2) if dashboard_data else 'Sin métricas registradas en este momento.'}\n\n"
+            f"INSTRUCCIONES:\n"
+            f"El gerente te ha hecho una pregunta o comentario sobre las estadísticas, ingresos, nivel de urgencia o actividad. "
+            f"Respóndele en español con consejos concisos, análisis útiles y recomendaciones estratégicas para mejorar la operación "
+            f"del call center. Sé profesional, directo y mantén un tono acorde al asistente ({model_label}). Limita tu respuesta a un máximo de 3-4 oraciones."
+        )
+        updated_state = call_state
+
+    elif page == "historial":
+        active_call = req.page_context.get("active_call")
+        total_calls = req.page_context.get("total_calls", 0)
+        current_page = req.page_context.get("current_page", 1)
+
+        if active_call:
+            system_prompt = (
+                f"Actúas como un Business Copilot inteligente de VozIA (simulando la personalidad y estilo del asistente: {model_label}).\n"
+                f"Estás asistiendo a un analista que está consultando el registro histórico de llamadas y ha seleccionado una llamada específica.\n\n"
+                f"DETALLES DE LA LLAMADA HISTÓRICA SELECCIONADA:\n"
+                f"- ID de Sesión: {active_call.get('session_id')}\n"
+                f"- Transcripción: \"{active_call.get('transcript', 'No disponible')}\"\n"
+                f"- Emoción predominante: {active_call.get('emocion_principal', 'neutral').upper()}\n"
+                f"- Nivel de Satisfacción: {active_call.get('satisfaccion', 0)}%\n\n"
+                f"INSTRUCCIONES:\n"
+                f"El analista te ha hecho una consulta sobre esta llamada específica. Bríndale un análisis retrospectivo en español, "
+                f"evalúa cómo se manejó la situación o sugiere qué acciones correctivas tomar para el futuro. "
+                f"Mantén un tono conciso y alineado con {model_label}. Limita tu respuesta a un máximo de 3-4 oraciones."
+            )
+        else:
+            system_prompt = (
+                f"Actúas como un Business Copilot inteligente de VozIA (simulando la personalidad y estilo del asistente: {model_label}).\n"
+                f"Estás asistiendo a un analista que está explorando el Historial General de Llamadas de VozIA.\n"
+                f"Actualmente hay {total_calls} llamadas registradas en total en esta vista (página {current_page} del historial).\n\n"
+                f"INSTRUCCIONES:\n"
+                f"El analista te ha hecho una pregunta general sobre el historial de simulaciones o cómo analizar llamadas pasadas. "
+                f"Respóndele en español con consejos prácticos de análisis, cómo usar los filtros o mejores prácticas de control de calidad. "
+                f"Sé conciso y mantén el tono de {model_label} (máximo 3-4 oraciones)."
+            )
+        updated_state = call_state
+
+    else:  # "ia_voz"
+        if call_state is None:
+            return {
+                "session_id": req.session_id,
+                "response": "No hay una llamada activa en esta sesión. Inicia la simulación para hablar con el copiloto.",
+                "call_state": None
+            }
+
+        # Ejecutar el grafo de copiloto para actualizar el estado del dominio heurístico
+        state = {
+            "messages": [HumanMessage(content=req.message)],
+            "call_state": call_state
+        }
+        try:
+            result = app_copilot.invoke(state)
+            updated_state = result["call_state"]
+        except Exception as e:
+            print(f"Error al ejecutar grafo de copiloto: {e}")
+            updated_state = call_state
+
+        analisis = updated_state.get("analisis", {})
+        resultado = updated_state.get("resultado", {})
+        
+        system_prompt = (
+            f"Actúas como un Business Copilot inteligente de VozIA, simulando la personalidad y estilo del asistente: {model_label}.\n"
+            f"Estás asistiendo en tiempo real a un agente telefónico que está conversando con un cliente.\n\n"
+            f"INFORMACIÓN ACTUAL DE LA LLAMADA:\n"
+            f"- Transcripción actual del cliente: \"{updated_state.get('transcript', 'No disponible')}\"\n"
+            f"- Emoción predominante: {analisis.get('emocion_principal', 'neutral').upper()}\n"
+            f"- Satisfacción del cliente: {analisis.get('satisfaccion', '100')}%\n"
+            f"- Nivel de Angustia: {analisis.get('angustia', '0')}%\n"
+            f"- Nivel de Urgencia: {analisis.get('urgencia', '0')}%\n"
+            f"- Nivel de Interés: {analisis.get('interes', '0')}%\n"
+            f"- Resumen rápido: {resultado.get('resumen', 'Sin resumen aún.')}\n\n"
+            f"INSTRUCCIONES:\n"
+            f"El agente de VozIA te ha hecho una pregunta o comentario. Respóndele en español con consejos concisos, "
+            f"prácticos y accionables sobre cómo guiar la llamada. Sé claro, directo y mantén un tono acorde al asistente "
+            f"seleccionado ({model_label}). Limita tu respuesta a un máximo de 3-4 oraciones."
+        )
+
+    # Invocación al LLM
+    if llm is None:
+        ai_response = f"[Copiloto fuera de línea - Habilita USE_LLM=true] ({model_label}) está inactivo."
+        if page == "ia_voz" and updated_state:
+            ai_response += " Recomendación: " + updated_state.get("copilot", {}).get("guia_agente", {}).get("que_hacer", "Resolver el caso.")
+    else:
+        try:
+            messages = [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=req.message)
+            ]
+            response = llm.invoke(messages)
+            ai_response = response.content.strip()
+        except Exception as e:
+            print(f"Error al invocar LLM en copilot chat ({page}): {e}")
+            ai_response = f"Lo siento, ocurrió un error en la conexión de copiloto con {model_label}: {str(e)}"
+
+    if updated_state and req.session_id:
+        MEMORY_LIVE_CONTEXT[req.session_id] = updated_state
+
+        if calls_collection is not None:
+            try:
+                calls_collection.update_one(
+                    {"session_id": req.session_id},
+                    {"$set": {
+                        "call_state": updated_state,
+                        "last_updated": datetime.utcnow()
+                    }},
+                    upsert=True
+                )
+            except Exception as e:
+                print(f"Error al actualizar copiloto en MongoDB: {e}")
 
     return {
         "session_id": req.session_id,
-        "response": updated_state["copilot"]["guia_agente"]["que_hacer"],
+        "response": ai_response,
         "call_state": updated_state
     }
 
@@ -199,7 +315,8 @@ def get_history():
                 "session_id": doc.get("session_id"),
                 "timestamp": doc.get("timestamp").isoformat() if doc.get("timestamp") else None,
                 "transcript": doc.get("transcript"),
-                "call_state": doc.get("call_state")
+                "call_state": doc.get("call_state"),
+                "has_audio": "audio_data" in doc and doc["audio_data"] is not None
             })
         return history
     except Exception as e:

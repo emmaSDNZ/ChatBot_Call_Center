@@ -85,7 +85,7 @@ export default function KPICard({
               }
             `}
           >
-            {growth}
+            {realtime ? "Tiempo Real" : growth}
           </div>
         </div>
 

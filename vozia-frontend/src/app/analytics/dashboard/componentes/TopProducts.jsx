@@ -30,24 +30,12 @@ export default function TopProducts({ data = [] }) {
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[11px] uppercase tracking-wider text-slate-500">
-              Revenue Leaders
+              Servicios Líderes
             </span>
 
             <h3 className="text-lg font-semibold text-white mt-2">
-              Top Products
+              Servicios Principales
             </h3>
-          </div>
-
-          <div
-            className="
-              px-3 py-1
-              rounded-full
-              bg-white/[0.04]
-              border border-white/[0.05]
-              text-xs text-slate-300
-            "
-          >
-            Q2
           </div>
         </div>
 
@@ -70,9 +58,7 @@ export default function TopProducts({ data = [] }) {
                   {product.name}
                 </h4>
 
-                <p className="text-xs text-slate-500 mt-1">
-                  {product.sales}
-                </p>
+                <p className="text-xs text-slate-500 mt-1">{product.sales}</p>
               </div>
 
               <div
